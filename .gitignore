@@ -176,5 +176,5 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Examples
-examples/
+# sensitive Examples
+examples/sensitive
