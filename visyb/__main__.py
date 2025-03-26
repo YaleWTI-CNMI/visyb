@@ -4,10 +4,11 @@ from traitlets.config import Config
 from IPython.terminal.embed import InteractiveShellEmbed
 import threading
 import sys
+import runpy
 
 from . import server
 from .server import send_message
-from .processor import add_plot
+from .processor.__runtime__ import add_plot
 
 def server_thread_entry():
     asyncio.set_event_loop(server.server_loop)
@@ -26,22 +27,23 @@ def shell_thread_entry():
     shell = InteractiveShellEmbed(config=c)
     shell()
 
-def execute_file(path):
-    from .processor.builtin import plot_generator, ScatterPlot, modcont, modcat, modbool
-    from .processor import add_plot
+def execute_file(filepath):
+    import sys, os, builtins
 
-    exec_globals = {
-        "plot_generator": plot_generator,
-        "ScatterPlot": ScatterPlot,
-        "modcont": modcont,
-        "modcat": modcat,
-        "modbool": modbool,
-        "add_plot": add_plot,
-        "__builtins__": __builtins__,
-    }
+    filepath = os.path.abspath(filepath)
+    visyb_root = os.path.abspath(".")
 
-    with open(path, "r") as f:
-        exec(f.read(), exec_globals)
+    code = open(filepath, encoding="utf-8").read()
+    compiled = compile(code, filepath, 'exec')
+
+    exec_globals = {"__file__": filepath, "__name__": "__main__"}
+
+    sys_path_backup = sys.path[:]
+    sys.path.insert(0, visyb_root)
+    try:
+        exec(compiled, exec_globals)
+    finally:
+        sys.path = sys_path_backup
 
 
 if __name__ == "__main__":

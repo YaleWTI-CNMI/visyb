@@ -102,24 +102,6 @@ class PlotGenerator:
     def to_client_dict(self):
         return {"id": self.id, "mods": self.mods, "result": self.result}
 
-def to_client_dict(obj):
-    if hasattr(obj, 'to_client_dict') and callable(obj.to_client_dict):
-        return to_client_dict(obj.to_client_dict())
-    elif isinstance(obj, dict):
-        return {
-            to_client_dict(k): to_client_dict(v)
-            for k, v in obj.items()
-        }
-    elif isinstance(obj, (list, tuple, set)):
-        print(f'----- {obj}')
-        return type(obj)(to_client_dict(item) for item in obj)
-    elif isinstance(obj, (str, int, float, bool, type(None))):
-        return obj
-    else:
-        if hasattr(obj, '__dict__'):
-            return to_client_dict(vars(obj))
-        else:
-            return str(obj)
 
 def plot_generator(func: Callable):
     mods = {}
@@ -130,8 +112,6 @@ def plot_generator(func: Callable):
                 mods[param.name] = {"definition": mod, "value": param.default}
         except:
             continue
-
-    print(mods)
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
