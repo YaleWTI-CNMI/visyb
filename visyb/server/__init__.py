@@ -4,10 +4,11 @@ from websockets.server import serve
 import websockets
 import json
 import functools
+from ..utils.signals import Signal
 
 server_loop = asyncio.new_event_loop()
 CONNECTIONS = []
-
+on_received_message = Signal()
 
 def run_on_server_loop(func):
     @functools.wraps(func)
@@ -21,9 +22,14 @@ def run_on_server_loop(func):
 async def handler(ws):
     CONNECTIONS.append(ws)
     await send_message("CONNECTED", {}, connections=[ws])
+
     try:
-        # while ws.state == websockets.protocol.State.OPEN:
-        #     await ws.drain()
+        async for string in ws:
+            try:
+                message = json.loads(string)
+                await on_received_message.emit(ws, message)
+            except RuntimeError as err:
+                print(f"[ERR] While processing incoming message [{message}]: {err}")
 
         await ws.wait_closed()
     finally:

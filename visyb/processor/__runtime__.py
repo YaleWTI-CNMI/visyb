@@ -1,8 +1,8 @@
-from ..server import send_message
-
+from .. import server
 
 ID_COUNTER = 0
 PLOTS = dict()
+
 
 def new_id() -> int:
     global ID_COUNTER
@@ -13,19 +13,27 @@ async def add_plot(plot):
     plot.id = new_id()
     PLOTS[plot.id] = plot
 
-    data = None
-    try:
-        data = to_client_dict(plot)
-    except:
-        print("[ERROR] Plot result is not serializable")
-    await send_message("PLOT_ADDED", to_client_dict(plot))
+    await server.send_message("PLOT_ADDED", to_client_dict(plot))
+
+async def on_received_message(conn, message):
+    print(message)
+    if message["type"] == "UPDATE_MODS":
+        id = message["data"]["id"]
+
+        for mod_name, mod_value in message["data"]["mods"].items():
+            PLOTS[id].update_mod(mod_name, mod_value)
+
+        await server.send_message("PLOT_UPDATED", to_client_dict(PLOTS[id]))
+
+
 
 def to_client_dict(obj):
     if hasattr(obj, 'to_client_dict') and callable(obj.to_client_dict):
         return to_client_dict(obj.to_client_dict())
     elif isinstance(obj, dict):
         return {
-            to_client_dict(k): to_client_dict(v)
+            # to_client_dict(k): to_client_dict(v)
+            str(k): to_client_dict(v)
             for k, v in obj.items()
         }
     elif isinstance(obj, (list, tuple, set)):
@@ -37,3 +45,7 @@ def to_client_dict(obj):
             return to_client_dict(vars(obj))
         else:
             return str(obj)
+
+# ===============
+
+server.on_received_message.connect(on_received_message)

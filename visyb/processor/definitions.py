@@ -76,9 +76,42 @@ def modbool(*args, **kwargs):
 class ScatterPlot:
     def __init__(self, **kwargs):
         self.type = "scatter"
+        self.xlim = [min(*kwargs["x"]), max(*kwargs["x"])]
+        self.ylim = [min(*kwargs["y"]), max(*kwargs["y"])]
+        self.zlim = [min(*kwargs["z"]), max(*kwargs["z"])]
+
         self.__dict__.update(kwargs)
 
     pass
+
+class BuilderPlot:
+    def __init__(self, xlim, ylim, zlim, **kwargs):
+        self.type = "builder"
+        self.objects = dict()
+
+        self.xlim = xlim
+        self.ylim = ylim
+        self.zlim = zlim
+
+        self.__dict__.update(kwargs)
+        pass
+
+    def add_line(self, x, y, z, color, id=None):
+        if id is None:
+            if len(self.objects) == 0:
+                id = 0
+            else:
+                id = max(self.objects.keys()) + 1
+
+        self.objects[id] = {
+            "type": "line",
+            "x": x,
+            "y": y,
+            "z": z,
+            "color": color
+        }
+
+
 
 class PlotGenerator:
     def __init__(self, func, args, kwargs, mods):
@@ -97,7 +130,8 @@ class PlotGenerator:
             **{k: v["value"] for k, v in self.mods.items()})
 
     def update_mod(self, name, newval):
-        self.mods[name].value = newval
+        self.mods[name]["value"] = newval
+        self.run()
 
     def to_client_dict(self):
         return {"id": self.id, "mods": self.mods, "result": self.result}
