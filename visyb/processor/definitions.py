@@ -3,6 +3,8 @@ from typing import Type, Annotated, get_type_hints, Protocol, Callable,runtime_c
 import inspect
 import functools
 
+from visyb.utils import vrid
+
 @runtime_checkable
 class Modifier(Protocol):
     def basetype() -> Type: ...
@@ -96,18 +98,36 @@ class BuilderPlot:
         self.__dict__.update(kwargs)
         pass
 
-    def add_line(self, x, y, z, color, id=None):
-        if id is None:
-            if len(self.objects) == 0:
-                id = 0
-            else:
-                id = max(self.objects.keys()) + 1
 
-        self.objects[id] = {
-            "type": "line",
+    def vrid_handler(index):
+        return
+
+    def add_point_set(self, x, y, z, color={"r": 1, "g": 1, "b": 1}):
+        obj_vrid = vrid.VRID(self)
+        self.objects[obj_vrid] = {
+            "type": "point_set",
+            "vrid": obj_vrid,
             "x": x,
             "y": y,
             "z": z,
+            "xlim": self.xlim,
+            "ylim": self.ylim,
+            "zlim": self.zlim,
+            "color": color
+        }
+        return
+
+    def add_line(self, x, y, z, color):
+        obj_vrid = vrid.VRID(self)
+        self.objects[obj_vrid] = {
+            "type": "line",
+            "vrid": obj_vrid,
+            "x": x,
+            "y": y,
+            "z": z,
+            "xlim": self.xlim,
+            "ylim": self.ylim,
+            "zlim": self.zlim,
             "color": color
         }
 
