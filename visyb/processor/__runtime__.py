@@ -1,3 +1,4 @@
+from visyb.utils import vrid
 from .. import server
 
 ID_COUNTER = 0
@@ -16,7 +17,6 @@ async def add_plot(plot):
     await server.send_message("PLOT_ADDED", to_client_dict(plot))
 
 async def on_received_message(conn, message):
-    print(message)
     if message["type"] == "UPDATE_MODS":
         id = message["data"]["id"]
 
@@ -24,6 +24,15 @@ async def on_received_message(conn, message):
             PLOTS[id].update_mod(mod_name, mod_value)
 
         await server.send_message("PLOT_UPDATED", to_client_dict(PLOTS[id]))
+    elif message["type"] == "VRID_CALL":
+        data = message["data"]
+        handler = vrid.get_vrid_handler(data["vrid"])
+
+        if not handler:
+            print(f"No VRID handler registered for {data["vrid"]}")
+            return
+
+        handler(vrid=data["vrid"], **data["args"])
 
 
 

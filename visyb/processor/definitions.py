@@ -86,6 +86,13 @@ class ScatterPlot:
 
     pass
 
+class Model3DPlot:
+    def __init__(self, data, format, **kwargs):
+        self.type = "model3d"
+        self.data = data
+        self.format = format
+        self.__dict__.update(kwargs)
+
 class BuilderPlot:
     def __init__(self, xlim, ylim, zlim, **kwargs):
         self.type = "builder"
@@ -99,10 +106,13 @@ class BuilderPlot:
         pass
 
 
-    def vrid_handler(index):
+    def vrid_handler(self, vrid, action, index):
+        for obj_vrid, data in self.objects.items():
+            if obj_vrid == vrid and "onclick" in data:
+                data["onclick"](index)
         return
 
-    def add_point_set(self, x, y, z, color={"r": 1, "g": 1, "b": 1}):
+    def add_point_set(self, x, y, z, color={"r": 1, "g": 1, "b": 1}, onclick=None):
         obj_vrid = vrid.VRID(self)
         self.objects[obj_vrid] = {
             "type": "point_set",
@@ -113,8 +123,10 @@ class BuilderPlot:
             "xlim": self.xlim,
             "ylim": self.ylim,
             "zlim": self.zlim,
-            "color": color
+            "color": color,
+            "onclick": onclick
         }
+
         return
 
     def add_line(self, x, y, z, color):

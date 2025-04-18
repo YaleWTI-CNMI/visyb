@@ -5,6 +5,7 @@ from IPython.terminal.embed import InteractiveShellEmbed
 import threading
 import sys
 import runpy
+import os
 
 from . import server
 from .server import send_message
@@ -31,7 +32,14 @@ def execute_file(filepath):
     import sys, os, builtins
 
     filepath = os.path.abspath(filepath)
+    script_dir = os.path.dirname(filepath)
     visyb_root = os.path.abspath(".")
+
+    # Store current directory
+    original_cwd = os.getcwd()
+
+    # Change to script directory
+    os.chdir(script_dir)
 
     code = open(filepath, encoding="utf-8").read()
     compiled = compile(code, filepath, 'exec')
@@ -44,6 +52,8 @@ def execute_file(filepath):
         exec(compiled, exec_globals)
     finally:
         sys.path = sys_path_backup
+        # Restore original directory
+        os.chdir(original_cwd)
 
 
 if __name__ == "__main__":
