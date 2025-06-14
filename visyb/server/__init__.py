@@ -1,6 +1,6 @@
 import asyncio
 import websockets.protocol
-from websockets.server import serve
+from websockets import serve
 import websockets
 import json
 import functools
