@@ -29,8 +29,7 @@ async def handler(ws):
                 message = json.loads(string)
                 await on_received_message.emit(ws, message)
             except Exception as err:
-                print(f"[ERR] While processing incoming message [{message}]: {err}")
-                json.JSONDecodeError
+                print(f"[ERR] While processing incoming message [{string}]: {err}")
 
         await ws.wait_closed()
     finally:
