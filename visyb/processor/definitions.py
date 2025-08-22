@@ -112,7 +112,7 @@ class BuilderPlot:
                 data["onclick"](index)
         return
 
-    def add_point_set(self, x, y, z, color={"r": 1, "g": 1, "b": 1}, onclick=None):
+    def add_point_set(self, x, y, z, color={"r": 1, "g": 1, "b": 1}, onclick=None, metadata=[]):
         obj_vrid = vrid.VRID(self)
         self.objects[obj_vrid] = {
             "type": "point_set",
@@ -124,7 +124,8 @@ class BuilderPlot:
             "ylim": self.ylim,
             "zlim": self.zlim,
             "color": color,
-            "onclick": onclick
+            "onclick": onclick,
+            "metadata": metadata
         }
 
         return
