@@ -43,6 +43,15 @@ async def start():
 
 @run_on_server_loop
 async def send_message(type, data, connections=CONNECTIONS):
-    s = json.dumps({"type": type, "data": data})
+    s = json.dumps({"type": type, "data": data}) + "\n" # newline is the designated message terminator
+    s_splits = split_message(s)
     for conn in connections:
-        await conn.send(s)
+        for part in s_splits:
+            await conn.send(part)
+
+def split_message(msg: str):
+    MAX_LEN = 2**16 # in bytes
+    parts = []
+    for i in range(0, len(msg), MAX_LEN):
+        parts.append(msg[i:i+MAX_LEN])
+    return parts
