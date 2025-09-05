@@ -184,3 +184,81 @@ def plot_generator(func: Callable):
         return PlotGenerator(func, args, kwargs, mods)
 
     return wrapper
+
+
+#  3D Graph visualization with interactive nodes
+
+class Graph3DPlot:
+
+    def __init__(self, movable_nodes=False):
+        self.movable_nodes = movable_nodes
+        self.nodes = []
+        self.edges = []
+        self.id = None
+        self.node_callbacks = {}
+
+    def add_node(self, id, x, y, z, label=None, color=None, size=1.0, movable=None, on_move=None, **kwargs):
+        # add a node to the graph
+        node = {
+            'id': id,
+            'x': x,
+            'y': y,
+            'z': z,
+            'label': label or str(id),
+            'color': color or {'r': 0.5, 'g': 0.5, 'b': 1.0},
+            'size': size,
+            'movable': movable if movable is not None else self.movable_nodes,
+            **kwargs
+        }
+
+        # store callback if provided
+        if on_move is not None:
+            self.node_callbacks[id] = on_move
+
+        self.nodes.append(node)
+
+    def add_edge(self, source_id, target_id, color=None, width=1.0, **kwargs):
+        # add edge between nodes
+        edge = {
+            'source_id': source_id,
+            'target_id': target_id,
+            'color': color or {'r': 0.8, 'g': 0.8, 'b': 0.8},
+            'width': width,
+            **kwargs
+        }
+        self.edges.append(edge)
+
+    def get_node_by_id(self, node_id):
+        # get node by id
+        for node in self.nodes:
+            if str(node['id']) == str(node_id):
+                return node
+        return None
+
+    def update_node_position(self, node_id, x, y, z):
+        # update node position and trigger callback if any
+        node = self.get_node_by_id(node_id)
+        if node:
+            node['x'] = x
+            node['y'] = y
+            node['z'] = z
+
+            # trigger callback if any
+            if node_id in self.node_callbacks:
+                try:
+                    self.node_callbacks[node_id](node_id, x, y, z)
+                except Exception as e:
+                    print(f"Error calling callback for node with id{node_id}: {e}")
+
+            return True
+        return False
+
+    def to_client_dict(self):
+        # convert to dictionary
+        return {
+            'id': self.id,
+            'type': 'graph3d',
+            'nodes': self.nodes,
+            'edges': self.edges,
+            'movable_nodes': self.movable_nodes
+        }
