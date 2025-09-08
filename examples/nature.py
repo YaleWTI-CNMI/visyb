@@ -3,9 +3,13 @@ import random
 import numpy as np
 from visyb.processor.definitions import BuilderPlot, modcont, plot_generator
 import time
+import sys
+
+if len(sys.argv) < 2:
+    raise ValueError("Please provide the path to the TSV file as a command-line argument.")
 
 nature_tsv = open(
-    "C:\\Users\\Alex\\Documents\\GitHub\\visyb\\examples\\sensitive\\nature-journal-136k.tsv",
+    sys.argv[1],
     "r",
     encoding="utf-8",
 )
