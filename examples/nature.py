@@ -15,7 +15,7 @@ nature_data = [line.strip().split("\t") for line in nature_data[1:]]  # type: ig
 
 
 @plot_generator
-def nature_test(zvariance: modcont(range=[0, 50], step=1) = 0, sizeamplifier: modcont(range=[1, 1.5], step=0.01) = 1):  # type: ignore
+def nature_test(zvariance: modcont(range=[0, 50], step=1) = 0, size_multiplier: modcont(range=[50, 1000], step=1) = 50):  # type: ignore
     start_time = time.time()
 
     # Headers: pid	date	journal	title	abstract	mesh_terms	x	y	citation_count	size	year	pmcid	mesh_topics
@@ -28,9 +28,6 @@ def nature_test(zvariance: modcont(range=[0, 50], step=1) = 0, sizeamplifier: mo
         max(citation_counts) if max(citation_counts) != min_cite else min_cite + 1
     )
 
-    print("Min citation count:", min_cite)
-    print("Max citation count:", max_cite)
-
     def lerp(a, b, t):
         return a + (b - a) * t
 
@@ -39,7 +36,7 @@ def nature_test(zvariance: modcont(range=[0, 50], step=1) = 0, sizeamplifier: mo
         "y": [float(row[7]) for row in nature_data],
         "z": [50 + random.uniform(-zvariance, zvariance) for _ in nature_data],
         "size": [
-            pow(lerp(0.001, 0.004, (math.log10(int(float(row[8])) + 1) - min_cite) / (max_cite - min_cite)), sizeamplifier)
+            min(100, float(row[9])) / size_multiplier if row[9] != "" else 0.1 / size_multiplier
             for row in nature_data
         ],
         "color": [
