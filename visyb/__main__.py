@@ -1,4 +1,6 @@
+import argparse
 import asyncio
+import signal
 import IPython
 from traitlets.config import Config
 from IPython.terminal.embed import InteractiveShellEmbed
@@ -15,14 +17,12 @@ def server_thread_entry():
     asyncio.set_event_loop(server.server_loop)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(server.start())
-    loop.run_forever() # this is missing
-    loop.close()
 
 def shell_thread_entry():
     c = Config()
 
     c.TerminalInteractiveShell.banner1 = "VISYB Interactive Shell"
-    c.TerminalInteractiveShell.banner2 = "=" * 50 + "\n"
+    c.TerminalInteractiveShell.banner2 = "\n"
     c.TerminalInteractiveShell.confirm_exit = False
 
     shell = InteractiveShellEmbed(config=c)
@@ -57,16 +57,30 @@ def execute_file(filepath):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="VISYB Server")
+    parser.add_argument("--no-shell", action="store_true", help="Disable interactive shell (for deployments)")
+    args = parser.parse_args()
+
     server_thread = threading.Thread(target=server_thread_entry, daemon=True)
-    shell_thread = threading.Thread(target=shell_thread_entry, daemon=True)
-
     server_thread.start()
-    shell_thread.start()
 
-    if sys.stdin.isatty():
-        shell_thread.join()
+    if args.no_shell:
+        # Headless mode - just run the server
+        print("[INFO] Running in headless mode (no interactive shell)")
+        print("[INFO] Press Ctrl+C to stop")
+        try:
+            while server_thread.is_alive():
+                server_thread.join(timeout=0.5)
+        except KeyboardInterrupt:
+            print("\n[INFO] Shutting down...")
     else:
-        server_thread.join()
+        # Interactive mode - start shell
+        shell_thread = threading.Thread(target=shell_thread_entry, daemon=True)
+        shell_thread.start()
 
+        if sys.stdin.isatty():
+            shell_thread.join()
+        else:
+            server_thread.join()
 
     print("VISYB terminated")

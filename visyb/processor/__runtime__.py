@@ -10,11 +10,12 @@ def new_id() -> int:
     ID_COUNTER += 1
     return ID_COUNTER
 
-async def add_plot(plot):
+def add_plot(plot):
     plot.id = new_id()
     PLOTS[plot.id] = plot
+    print(f"[INFO] Plot {plot.id} added to PLOTS dictionary")
 
-    await server.send_message("PLOT_ADDED", to_client_dict(plot))
+    server.send_message("PLOT_ADDED", to_client_dict(plot))
 
 async def on_received_message(conn, message):
     if message["type"] == "UPDATE_MODS":
@@ -23,7 +24,22 @@ async def on_received_message(conn, message):
         for mod_name, mod_value in message["data"]["mods"].items():
             PLOTS[id].update_mod(mod_name, mod_value)
 
-        await server.send_message("PLOT_UPDATED", to_client_dict(PLOTS[id]))
+        # send_message now handles cross-loop scheduling internally
+        server.send_message("PLOT_UPDATED", to_client_dict(PLOTS[id]))
+
+    elif message["type"] == "ADD_PLOT":
+        plot_data = message["data"]
+
+        if "id" not in plot_data:
+            plot_data["id"] = new_id()
+
+        plot_id = plot_data["id"]
+        PLOTS[plot_id] = plot_data  # Store as dict for now
+
+        print(f"[INFO] Plot {plot_id} received from client, broadcasting...")
+
+        server.send_message("PLOT_ADDED", plot_data)
+
     elif message["type"] == "VRID_CALL":
         data = message["data"]
         handler = vrid.get_vrid_handler(data["vrid"])
@@ -55,6 +71,5 @@ def to_client_dict(obj):
         else:
             return str(obj)
 
-# ===============
 
 server.on_received_message.connect(on_received_message)
