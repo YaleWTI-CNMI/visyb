@@ -7,18 +7,10 @@
 
 ## Installation
 
-### With Conda (recommended)
 
 ```bash
 conda env create -f environment.yml
 conda activate visyb
-```
-
-This installs all dependencies and the `visyb` package in editable mode.
-
-### With pip (Python 3.12 required)
-
-```bash
 pip install ipython numpy pandas traitlets websockets
 pip install -e .
 ```
