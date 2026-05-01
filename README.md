@@ -1,4 +1,4 @@
-# visyb
+# VISY-B
 
 ## Requirements
 
