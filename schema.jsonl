@@ -1,0 +1,38 @@
+[
+    {
+        "$scene": {
+           "path": "res://scenes/scene.tscn",
+           "children": [
+                {
+                    "$vrid": 1,
+                    "$scene": null,
+                    "children": [],
+                    "name": "Root Node"
+                }
+           ]
+        },
+        "$env": {
+            "limits": {
+                "x": [-100, 100],
+                "y": [-100, 100],
+                "z": [-100, 100]
+            },
+            "dimensions": {
+                "x": 0.2, // in meters
+                "y": 0.2, // in meters
+                "z": 0.2 // in meters
+            }
+        },
+        "$prefs": { /* Extra env keys modified by users that persist when tree regenerates */ },
+        "$vrid": 30,
+        "points": [
+            {
+                "transform": {
+                    "position": [0, 0, 0],
+                    "rotation": [0, 0, 0],
+                    "scale": [1, 1, 1]
+                }
+            }
+        ]
+    }
+]
