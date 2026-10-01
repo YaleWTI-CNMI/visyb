@@ -6,7 +6,7 @@ VISY runs your analysis in Python and displays its plots in the Godot client. Yo
 
 ## One-time macOS setup
 
-Use this repository's `desktop-onboarding` branch together with the Godot project's matching branch. Keep the repositories beside each other:
+Use this repository's `master` branch together with the Godot project's `main` branch. Keep the repositories beside each other:
 
 ```text
 VISY/

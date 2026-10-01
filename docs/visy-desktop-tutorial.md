@@ -11,7 +11,7 @@ The figures below were rendered by the actual VISY desktop scene using the suppl
 ### Requirements
 
 - A Mac with Homebrew available in Terminal. Check with `brew --version`.
-- Matching **desktop-onboarding** source folders for `visyb` and `project-visy`.
+- Source folders from **visyb/master** and **project-visy/main**.
 - The separately supplied **`visy-desktop-examples.zip`** example archive, saved in Downloads.
 - Two Terminal tabs or windows: one for the Python shell and one for Godot.
 
@@ -41,13 +41,13 @@ If Conda is already installed and working, keep that installation and run only `
 
 ### Arrange the source folders
 
-Clone the matching desktop branches into `~/VISY`:
+Clone the default branches into `~/VISY`:
 
 ```bash
 mkdir -p ~/VISY
 cd ~/VISY
-git clone --branch desktop-onboarding https://github.com/YaleWTI-CNMI/visyb.git
-git clone --branch desktop-onboarding https://github.com/YaleWTI-CNMI/project-visy.git
+git clone --branch master https://github.com/YaleWTI-CNMI/visyb.git
+git clone --branch main https://github.com/YaleWTI-CNMI/project-visy.git
 ```
 
 This produces the following layout:
@@ -63,7 +63,7 @@ This produces the following layout:
     └── intro_scene_debug.tscn
 ```
 
-The source repositories are [visyb](https://github.com/YaleWTI-CNMI/visyb) and [project-visy](https://github.com/YaleWTI-CNMI/project-visy). This guide uses their matching **desktop-onboarding** branches. Select these branches explicitly when cloning. Repository access is required if prompted by GitHub.
+The source repositories are [visyb](https://github.com/YaleWTI-CNMI/visyb) and [project-visy](https://github.com/YaleWTI-CNMI/project-visy). This guide uses their default branches: **master** for VISYB and **main** for the Godot client. Repository access is required if prompted by GitHub.
 
 The commands below assume this directory layout. Substitute the actual parent directory if the source folders are stored elsewhere.
 
@@ -163,7 +163,7 @@ godot --path . res://intro_scene_debug.tscn
 
 The explicit scene path is important: **`intro_scene_debug.tscn` is the desktop workspace; `intro_scene.tscn` is the VR scene.**
 
-Alternatively, open Godot, import `~/VISY/project-visy/project.godot`, and press **Play Project / F5**. The desktop-onboarding version selects the desktop scene by default.
+Alternatively, open Godot, import `~/VISY/project-visy/project.godot`, and press **Play Project / F5**. The project selects the desktop scene by default.
 
 **Expected result:** an empty 3D workspace, a **Plots** inspector on the right, and the status **Connected · send a plot from the VISYB shell** at the bottom. An empty workspace at this stage is normal.
 
@@ -343,7 +343,7 @@ On later visits, repeat **Section 4** and the dataset commands. The environment 
 | --- | --- |
 | `conda` is missing, or activation fails | Confirm Homebrew's installation completed. Run `conda init zsh`, then open a new Terminal window. |
 | `godot` is not found | Run `brew install --cask godot`, or use `/Applications/Godot.app/Contents/MacOS/Godot` if the application is installed there. |
-| A source file or scene is missing | Confirm both source folders are the matching desktop-onboarding versions. |
+| A source file or scene is missing | Update `visyb/master` and `project-visy/main` to include the desktop setup. |
 | `No module named …` | Activate `visyb`, check `sys.executable`, and run `python -m pip check`. Use the supplied environment file. |
 | The archive or dataset cannot be found | Check the archive path and run preparation from `~/VISY/visyb`. The `%run` paths are relative to that directory. |
 | Godot says **Waiting for Python** | Keep `python -m visyb` running. The client connects to `ws://localhost:8765`. |
