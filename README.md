@@ -2,6 +2,8 @@
 
 VISY runs your analysis in Python and displays its plots in the Godot client. You load code into an IPython shell, construct a plot, and explicitly send it with `await add_plot(...)`. Selections and sliders in Godot call back into Python.
 
+**[Illustrated macOS desktop tutorial](docs/visy-desktop-tutorial.md)** — Homebrew setup, VISYB shell commands, and expected views for ATLAS and Kuramoto.
+
 ## One-time macOS setup
 
 Use this repository's `desktop-onboarding` branch together with the Godot project's matching branch. Keep the repositories beside each other:
@@ -17,10 +19,10 @@ Install [Miniforge](https://github.com/conda-forge/miniforge#download) for your 
 ```bash
 conda env create -f environment.yml
 conda activate visyb
-python -m visyb.prepare_examples ~/Downloads/visyb.7z
+python -m visyb.prepare_examples ~/Downloads/visy-desktop-examples.zip
 ```
 
-The last command imports the privately shared archive. It copies only ATLAS, Kuramoto, and their required data into `examples/sensitive/`. Those files and generated protein models stay Git-ignored. It prepares ATLAS for headless PyMOL on macOS and generates molecular frames only when selected. Repeating preparation keeps existing local files, including edits. It may take around a minute.
+The last command imports the separately shared `visy-desktop-examples.zip` archive. The original `visyb.7z` archive is also supported by substituting its path. It copies only ATLAS, Kuramoto, and their required data into `examples/sensitive/`. Those files and generated protein models stay Git-ignored. It prepares ATLAS for headless PyMOL on macOS and generates molecular frames only when selected. Repeating preparation keeps existing local files, including edits. It may take around a minute.
 
 Install the standard [Godot 4.6 macOS editor](https://godotengine.org/download/archive/4.6-stable/) and import `../project-visy/project.godot`. No .NET edition, export templates, headset, or VR runtime is needed.
 
