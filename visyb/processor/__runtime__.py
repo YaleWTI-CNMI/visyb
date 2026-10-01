@@ -10,11 +10,25 @@ def new_id() -> int:
     ID_COUNTER += 1
     return ID_COUNTER
 
+@server.run_on_server_loop
 async def add_plot(plot):
     plot.id = new_id()
     PLOTS[plot.id] = plot
 
     await server.send_message("PLOT_ADDED", to_client_dict(plot))
+    return plot.id
+
+
+@server.run_on_server_loop
+async def clear_plots():
+    for id in list(PLOTS):
+        await server.send_message("PLOT_REMOVED", {"id": id})
+    PLOTS.clear()
+
+
+async def on_connected(conn):
+    for plot in list(PLOTS.values()):
+        await server.send_message("PLOT_ADDED", to_client_dict(plot), connections=[conn])
 
 async def on_received_message(conn, message):
     if message["type"] == "UPDATE_MODS":
@@ -58,3 +72,4 @@ def to_client_dict(obj):
 # ===============
 
 server.on_received_message.connect(on_received_message)
+server.on_connected.connect(on_connected)

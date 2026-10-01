@@ -2,6 +2,7 @@ from typing import Type, Annotated, get_type_hints, Protocol, Callable,runtime_c
 
 import inspect
 import functools
+import copy
 
 from visyb.utils import vrid
 
@@ -108,7 +109,7 @@ class BuilderPlot:
 
     def vrid_handler(self, vrid, action, index):
         for obj_vrid, data in self.objects.items():
-            if obj_vrid == vrid and "onclick" in data:
+            if obj_vrid == vrid and callable(data.get("onclick")):
                 data["onclick"](index)
         return
 
@@ -152,16 +153,19 @@ class PlotGenerator:
         self.func = func
         self.args = args
         self.kwargs = kwargs
-        self.mods = mods
+        self.mods = copy.deepcopy(mods)
         self.id = -1
+        initial = inspect.signature(self.func).bind_partial(*self.args, **self.kwargs)
+        for name, mod in self.mods.items():
+            if name in initial.arguments:
+                mod["value"] = initial.arguments[name]
 
         self.run()
 
     def run(self):
-        self.result = self.func(
-            *self.args,
-            **self.kwargs,
-            **{k: v["value"] for k, v in self.mods.items()})
+        bound = inspect.signature(self.func).bind_partial(*self.args, **self.kwargs)
+        bound.arguments.update({name: mod["value"] for name, mod in self.mods.items()})
+        self.result = self.func(*bound.args, **bound.kwargs)
 
     def update_mod(self, name, newval):
         self.mods[name]["value"] = newval

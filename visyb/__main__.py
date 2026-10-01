@@ -1,72 +1,46 @@
+"""The VISY interactive shell and its local WebSocket server."""
 import asyncio
-import IPython
-from traitlets.config import Config
-from IPython.terminal.embed import InteractiveShellEmbed
 import threading
-import sys
-import runpy
-import os
+
+from IPython.terminal.embed import InteractiveShellEmbed
+from traitlets.config import Config
 
 from . import server
-from .server import send_message
-from .processor.__runtime__ import add_plot
+from .processor.__runtime__ import add_plot, clear_plots
 
-def server_thread_entry():
-    asyncio.set_event_loop(server.server_loop)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(server.start())
-    loop.run_forever() # this is missing
-    loop.close()
 
-def shell_thread_entry():
-    c = Config()
-
-    c.TerminalInteractiveShell.banner1 = "VISYB Interactive Shell"
-    c.TerminalInteractiveShell.banner2 = "=" * 50 + "\n"
-    c.TerminalInteractiveShell.confirm_exit = False
-
-    shell = InteractiveShellEmbed(config=c)
-    shell()
-
-def execute_file(filepath):
-    import sys, os, builtins
-
-    filepath = os.path.abspath(filepath)
-    script_dir = os.path.dirname(filepath)
-    visyb_root = os.path.abspath(".")
-
-    # Store current directory
-    original_cwd = os.getcwd()
-
-    # Change to script directory
-    os.chdir(script_dir)
-
-    code = open(filepath, encoding="utf-8").read()
-    compiled = compile(code, filepath, 'exec')
-
-    exec_globals = {"__file__": filepath, "__name__": "__main__"}
-
-    sys_path_backup = sys.path[:]
-    sys.path.insert(0, visyb_root)
+def main():
+    thread = threading.Thread(target=server.server_loop.run_forever, name="visyb-server")
+    thread.start()
+    listener = None
     try:
-        exec(compiled, exec_globals)
+        listener = asyncio.run_coroutine_threadsafe(server.start(), server.server_loop).result(10)
+        config = Config()
+        config.TerminalInteractiveShell.confirm_exit = False
+        config.TerminalInteractiveShell.banner1 = (
+            "VISYB Interactive Shell — ws://localhost:8765\n"
+            "Open the Godot desktop client, then load an example with %run.\n"
+            "Send a plot: await add_plot(your_plot())\n"
+            "Clear the workspace: await clear_plots()\n"
+            "See README.md for the ATLAS and Kuramoto commands.\n"
+        )
+        shell = InteractiveShellEmbed(config=config, user_ns={
+            "add_plot": add_plot, "clear_plots": clear_plots,
+        })
+        shell()
+    except OSError as error:
+        raise SystemExit(f"Cannot start VISYB on localhost:8765: {error}. Close any other VISYB shell.") from error
     finally:
-        sys.path = sys_path_backup
-        # Restore original directory
-        os.chdir(original_cwd)
+        if listener is not None:
+            async def close():
+                listener.close()
+                await listener.wait_closed()
+            asyncio.run_coroutine_threadsafe(close(), server.server_loop).result(10)
+        server.server_loop.call_soon_threadsafe(server.server_loop.stop)
+        thread.join(timeout=10)
+        server.server_loop.close()
+    print("VISYB terminated")
 
 
 if __name__ == "__main__":
-    server_thread = threading.Thread(target=server_thread_entry, daemon=True)
-    shell_thread = threading.Thread(target=shell_thread_entry, daemon=True)
-
-    server_thread.start()
-    shell_thread.start()
-
-    if sys.stdin.isatty():
-        shell_thread.join()
-    else:
-        server_thread.join()
-
-
-    print("VISYB terminated")
+    main()
