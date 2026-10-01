@@ -5,3 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "visyb"
 version = "0.1.0"
+description = "Interactive Python plots for the VISY Godot client"
+requires-python = ">=3.12"
+dependencies = ["ipython>=8,<10", "traitlets>=5,<6", "websockets>=15,<16"]
+
+[project.optional-dependencies]
+examples = ["numpy>=1.26.4,<2", "matplotlib>=3.9,<4", "mdtraj>=1.10,<1.11", "tqdm>=4,<5"]
+test = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+include = ["visyb*"]
+namespaces = true

@@ -1,57 +1,68 @@
 import asyncio
-import websockets.protocol
-from websockets import serve
-import websockets
-import json
 import functools
+import json
+
+from websockets.asyncio.server import serve
+from websockets.exceptions import ConnectionClosed
+
 from ..utils.signals import Signal
 
 server_loop = asyncio.new_event_loop()
-CONNECTIONS = []
+CONNECTIONS = set()
 on_received_message = Signal()
+on_connected = Signal()
+_send_lock = None
+
 
 def run_on_server_loop(func):
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        async def awaitable():
-            future = asyncio.run_coroutine_threadsafe(func(*args, **kwargs), server_loop)
-            return await asyncio.wrap_future(future)
-        return awaitable()
+    async def wrapper(*args, **kwargs):
+        if asyncio.get_running_loop() is server_loop:
+            return await func(*args, **kwargs)
+        if not server_loop.is_running():
+            raise RuntimeError("Start the VISYB shell with python -m visyb first.")
+        future = asyncio.run_coroutine_threadsafe(func(*args, **kwargs), server_loop)
+        return await asyncio.wrap_future(future)
     return wrapper
 
-async def handler(ws):
-    CONNECTIONS.append(ws)
-    await send_message("CONNECTED", {}, connections=[ws])
 
+async def handler(ws):
+    CONNECTIONS.add(ws)
     try:
+        await send_message("CONNECTED", {}, connections=[ws])
+        await on_connected.emit(ws)
+        print(f"Godot client connected ({len(CONNECTIONS)} client(s)).", flush=True)
         async for string in ws:
             try:
                 message = json.loads(string)
                 await on_received_message.emit(ws, message)
-            except Exception as err:
-                print(f"[ERR] While processing incoming message [{string}]: {err}")
-
-        await ws.wait_closed()
+            except Exception as error:
+                print(f"[VISYB] Cannot process client message: {error}", flush=True)
+    except ConnectionClosed:
+        pass
     finally:
-        CONNECTIONS.remove(ws)
+        CONNECTIONS.discard(ws)
 
 
-async def start():
-    async with serve(handler, "localhost", 8765) as server:
-        await server.serve_forever()
+async def start(host="localhost", port=8765):
+    global _send_lock
+    _send_lock = asyncio.Lock()
+    return await serve(handler, host, port)
 
 
 @run_on_server_loop
-async def send_message(type, data, connections=CONNECTIONS):
-    s = json.dumps({"type": type, "data": data}) + "\n" # newline is the designated message terminator
-    s_splits = split_message(s)
-    for conn in connections:
-        for part in s_splits:
-            await conn.send(part)
+async def send_message(type, data, connections=None):
+    # Keep chunks of different messages from interleaving on a socket.
+    message = json.dumps({"type": type, "data": data}, allow_nan=False) + "\n"
+    async with _send_lock:
+        for conn in tuple(CONNECTIONS if connections is None else connections):
+            try:
+                for part in split_message(message):
+                    await conn.send(part)
+            except ConnectionClosed:
+                CONNECTIONS.discard(conn)
 
-def split_message(msg: str):
-    MAX_LEN = 2**16 # in bytes
-    parts = []
-    for i in range(0, len(msg), MAX_LEN):
-        parts.append(msg[i:i+MAX_LEN])
-    return parts
+
+def split_message(message):
+    # json.dumps uses ASCII escapes, so characters and bytes have equal lengths.
+    return [message[i:i + 65536] for i in range(0, len(message), 65536)]
